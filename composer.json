@@ -1,5 +1,5 @@
 {
-    "name": "webburza/sylius-wishlist-bundle",
+    "name": "connectholland/sylius-wishlist-bundle",
     "description": "Wishlist bundle for Sylius e-commerce platform.",
     "type": "symfony-bundle",
     "license": "MIT",
