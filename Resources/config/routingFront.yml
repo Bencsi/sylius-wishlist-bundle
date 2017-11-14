@@ -35,7 +35,7 @@ webburza_frontend_wishlist_remove_item:
         _controller: webburza_wishlist.controller.front.wishlist_item:removeAction
 
 webburza_frontend_wishlist_partial_cart_add_item:
-    path: /item/add-to-cart/
+    path: /item/add-to-cart/{id}
     methods: [GET]
     defaults:
         _controller: webburza_wishlist.controller.front.wishlist_item:addToCartAction

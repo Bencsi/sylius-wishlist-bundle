@@ -15,6 +15,11 @@ class WishlistItem implements WishlistItemInterface
     protected $id;
 
     /**
+     * @var int
+     */
+    protected $price;
+
+    /**
      * @var WishlistInterface
      */
     protected $wishlist;
@@ -30,6 +35,24 @@ class WishlistItem implements WishlistItemInterface
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPrice()
+    {
+        return $this->price;
+    }
+
+    /**
+     * @param int $price
+     *
+     * @return WishlistItemInterface
+     */
+    public function setPrice(?int $price)
+    {
+        $this->price = $price;
     }
 
     /**

@@ -3,9 +3,6 @@
 namespace Webburza\Sylius\WishlistBundle\Controller\Frontend;
 
 use FOS\RestBundle\Controller\FOSRestController;
-use FOS\RestBundle\View\View;
-use Sylius\Bundle\CoreBundle\Form\Type\Order\AddToCartType;
-use Sylius\Component\Order\Model\OrderItemInterface;
 use Sylius\Component\User\Model\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,13 +16,22 @@ use Webburza\Sylius\WishlistBundle\Model\WishlistItemInterface;
 class WishlistItemController extends FOSRestController
 {
     /**
+     * @var bool
+     */
+    private $priceLock;
+
+    /**
      * WishlistItemController constructor.
      *
      * @param ContainerInterface $container
+     * @param bool               $priceLock
      */
-    public function __construct(ContainerInterface $container)
-    {
+    public function __construct(
+        ContainerInterface $container,
+        bool $priceLock
+    ) {
         $this->setContainer($container);
+        $this->priceLock = $priceLock;
     }
 
     /**
@@ -38,37 +44,37 @@ class WishlistItemController extends FOSRestController
      */
     public function addToCartAction(Request $request)
     {
-        $cart = $this->get('sylius.context.cart')->getCart();
+        /** @var WishlistItemInterface $wishlistItem */
+        $wishlistItem =
+            $this->get('webburza_wishlist.repository.wishlist_item')->find($request->get('id'));
 
-        $variant =
-            $this->get('sylius.repository.product_variant')->find($request->get('variantId'));
-
-        /** @var OrderItemInterface $orderItem */
-        $orderItem = $this->get('sylius.factory.order_item')
-                          ->createForProduct($variant->getProduct());
-
-        $addToCartCommand =
-            $this->get('sylius.factory.add_to_cart_command')
-                 ->createWithCartAndCartItem($cart, $orderItem);
-
-        $form = $this->get('form.factory')->create(AddToCartType::class, $addToCartCommand, [
-            'product' => $variant->getProduct()
-        ]);
-
-        $form->get('cartItem')->get('quantity')->setData(1);
-
-        if ($form->get('cartItem')->has('variant')) {
-            $form->get('cartItem')->get('variant')->setData($variant);
+        // Check if this item belongs to the current customer trying to remove it
+        if ($wishlistItem->getWishlist()->getUser() != $this->getUser()) {
+            throw $this->createAccessDeniedException();
         }
 
-        $view = View::create([
-            'product' => $variant->getProduct(),
-            'form'    => $form->createView()
-        ]);
+        $item = $this->get('sylius.factory.cart_item')->createNew();
+        $item->setVariant($wishlistItem->getProductVariant());
 
-        $view->setTemplate('@WebburzaSyliusWishlist/Frontend/Wishlist/_cartForm.html.twig');
+        $this->get('sylius.order_item_quantity_modifier')->modify($item, 1);
+        $cart = $this->get('sylius.context.cart')->getCart();
+        $this->get('sylius.order_modifier')->addToOrder($cart, $item);
 
-        return $this->handleView($view);
+        if ($this->priceLock) {
+            // The order modifier might have added the quantity of $item to an existing orderItem so use that one to set the price lock
+            foreach ($cart->getItems() as $cartItem) {
+                if ($item->equals($cartItem)) {
+                    $cartItem->setUnitPrice($wishlistItem->getPrice());
+                    $cartItem->setImmutable(true);
+                }
+            }
+        }
+
+        $cartManager = $this->get('sylius.manager.order');
+        $cartManager->persist($cart);
+        $cartManager->flush();
+
+        return $this->redirectToRoute('sylius_shop_cart_summary');
     }
 
     /**
@@ -140,6 +146,15 @@ class WishlistItemController extends FOSRestController
         $wishlistItem = $this->get('webburza_wishlist.factory.wishlist_item')->createNew();
         $wishlistItem->setProductVariant($productVariant);
 
+        if ($this->priceLock) {
+            $price = $this->get('sylius.calculator.product_variant_price')->calculate(
+                $productVariant,
+                ['channel' => $this->get('sylius.context.channel')->getChannel()]
+            );
+
+            $wishlistItem->setPrice($price);
+        }
+
         $wishlist->addItem($wishlistItem);
 
         // Persist the wishlist item
@@ -162,7 +177,7 @@ class WishlistItemController extends FOSRestController
      * Get the requested wishlist, if any,
      * or the first one for the customer.
      *
-     * @param Request $request
+     * @param Request       $request
      * @param UserInterface $user
      *
      * @return null|WishlistInterface
@@ -174,7 +189,7 @@ class WishlistItemController extends FOSRestController
             $wishlist = $this->get('webburza_wishlist.repository.wishlist')
                              ->findOneBy([
                                  'id'   => $wishlistId,
-                                 'user' => $user
+                                 'user' => $user,
                              ]);
 
             if (!$wishlist) {
@@ -199,8 +214,9 @@ class WishlistItemController extends FOSRestController
     /**
      * @param Request $request
      *
-     * @return mixed
      * @throws BadRequestHttpException
+     *
+     * @return mixed
      */
     protected function resolveProductVariant(Request $request)
     {
@@ -235,7 +251,7 @@ class WishlistItemController extends FOSRestController
 
         // Redirect back to the wishlist
         return $this->redirectToRoute('webburza_frontend_wishlist_show', [
-            'slug' => $wishlist->getSlug()
+            'slug' => $wishlist->getSlug(),
         ]);
     }
 }

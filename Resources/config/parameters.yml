@@ -12,6 +12,7 @@ parameters:
 
     # Repositories
     webburza_wishlist.repository.wishlist.class: Webburza\Sylius\WishlistBundle\Doctrine\ORM\WishlistRepository
+    webburza_wishlist.repository.wishlist_item.class: Webburza\Sylius\WishlistBundle\Doctrine\ORM\WishlistItemRepository
 
     # Plain factories
     webburza_wishlist.factory.plain.wishlist.class: Sylius\Component\Resource\Factory\Factory
@@ -34,3 +35,9 @@ parameters:
 
     # Resolvers
     webburza_wishlist.resolver.product_variant_cart.class: Webburza\Sylius\WishlistBundle\Resolver\ProductVariantCartResolver
+
+    # Twig
+    webburza_wishlist.twig.wishlist_item.class: Webburza\Sylius\WishlistBundle\Twig\WishlistItemExtension
+
+    # Remover
+    webburza_wishlist.removed.expired_price_locks.class: Webburza\Sylius\WishlistBundle\Remover\ExpiredPriceLocksRemover
