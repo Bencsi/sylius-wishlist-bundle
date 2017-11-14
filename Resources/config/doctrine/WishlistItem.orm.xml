@@ -11,6 +11,8 @@
             <generator strategy="AUTO"/>
         </id>
 
+        <field name="price" column="price" type="integer" nullable="true" />
+
         <field name="createdAt" column="created_at" type="datetime">
             <gedmo:timestampable on="create"/>
         </field>

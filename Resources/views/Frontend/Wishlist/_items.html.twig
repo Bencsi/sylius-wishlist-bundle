@@ -19,7 +19,7 @@
                     {% include '@WebburzaSyliusWishlist/Frontend/Wishlist/_info.html.twig' with {'variant': item.productVariant} %}
                 </td>
                 <td class="right aligned two wide">
-                    {{ money.calculatePrice(item.productVariant) }}
+                    {{ money.convertAndFormat(wishlist_item_get_price(item)) }}
                 </td>
 
                 {% if app.user and app.user == wishlist.user %}
@@ -40,7 +40,10 @@
                             <div class="content">{{ 'sylius.ui.out_of_stock'|trans }}</div>
                         </div>
                     {% else %}
-                        {{ render(url('webburza_frontend_wishlist_partial_cart_add_item', {'variantId': item.productVariant.id})) }}
+                        <a href="{{ path('webburza_frontend_wishlist_partial_cart_add_item', {'id': item.id }) }}" class="ui icon labeled button primary">
+                            <i class="cart icon"></i>
+                            {{ 'sylius.ui.add_to_cart'|trans }}
+                        </a>
                     {% endif %}
                 </td>
             </tr>

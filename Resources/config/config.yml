@@ -14,6 +14,7 @@ sylius_resource:
 
         webburza_wishlist.wishlist_item:
             classes:
+                repository: '%webburza_wishlist.repository.wishlist_item.class%'
                 model: '%webburza_wishlist.model.wishlist_item.class%'
 
 doctrine:
@@ -40,3 +41,5 @@ twig:
 webburza_sylius_wishlist:
     multiple: false
     default_public: false
+    price_lock: false
+    price_locks_expiration_period: '7 days'

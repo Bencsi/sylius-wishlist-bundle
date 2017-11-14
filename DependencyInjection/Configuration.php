@@ -19,6 +19,8 @@ class Configuration implements ConfigurationInterface
             ->children()
                 ->booleanNode('multiple')->end()
                 ->booleanNode('default_public')->end()
+                ->booleanNode('price_lock')->end()
+                ->scalarNode('price_locks_expiration_period')->defaultValue('7 days')->cannotBeEmpty()->end()
             ->end();
 
         return $treeBuilder;

@@ -43,7 +43,7 @@ services:
 
     webburza_wishlist.controller.front.wishlist_item:
         class: '%webburza_wishlist.controller.front.wishlist_item.class%'
-        arguments: ['@service_container']
+        arguments: ['@service_container', '%webburza_sylius_wishlist.price_lock%']
 
     webburza_wishlist.provider.wishlist:
         class: '%webburza_wishlist.provider.wishlist.class%'
@@ -80,3 +80,16 @@ services:
             - '@sylius.context.cart'
             - '@sylius.factory.cart_item'
             - '@form.factory'
+
+    webburza_wishlist.twig.wishlist_item:
+        class: '%webburza_wishlist.twig.wishlist_item.class%'
+        arguments: ['@sylius.calculator.product_variant_price', '@sylius.context.channel', '%webburza_sylius_wishlist.price_lock%']
+        tags:
+            - { name: twig.extension }
+
+    webburza_sylius_wishlist.expired_price_locks_remover:
+        class: '%webburza_wishlist.removed.expired_price_locks.class%'
+        arguments:
+            - '@webburza_wishlist.repository.wishlist_item'
+            - '@doctrine.orm.entity_manager'
+            - '%webburza_sylius_wishlist.price_locks_expiration_period%'

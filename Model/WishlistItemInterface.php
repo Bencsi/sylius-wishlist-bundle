@@ -12,6 +12,18 @@ use Symfony\Component\Validator\Constraints as Assert;
 interface WishlistItemInterface extends ResourceInterface, TimestampableInterface
 {
     /**
+     * @return int
+     */
+    public function getPrice();
+
+    /**
+     * @param int $price
+     *
+     * @return WishlistItemInterface
+     */
+    public function setPrice(?int $price);
+
+    /**
      * @return WishlistInterface
      */
     public function getWishlist();
